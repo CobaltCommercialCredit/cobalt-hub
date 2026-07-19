@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cobalt Tools</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#002347; --cobalt:#0047AB; --secondary:#1a4b8c; --tertiary:#4a7fc4;
+    --bg:#f6f8fb; --panel:#ffffff; --line:#e2e8f0; --text:#0f1e33; --muted:#5b6b82;
+    --good:#0f7a4a; --bad:#b3261e;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:'IBM Plex Sans',sans-serif; -webkit-font-smoothing:antialiased; }
+  .wrap{ max-width:960px; margin:0 auto; padding:56px 28px 90px; }
+  .topline{ display:flex; justify-content:flex-end; margin-bottom:8px; }
+  .signout{ font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted);
+    background:none; border:none; cursor:pointer; padding:6px 10px; }
+  .signout:hover{ color:var(--navy); }
+  .header{ display:flex; align-items:center; margin-bottom:40px; }
+  .brand svg{ height:44px; width:auto; display:block; }
+  .brand-heading{ margin-left:18px; padding-left:18px; border-left:1px solid var(--line); }
+  .eyebrow{ font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin-bottom:4px; }
+  h1{ font-family:'Sora',sans-serif; font-size:24px; font-weight:600; margin:0; color:var(--navy); }
+  .grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .card{ background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:24px;
+    text-decoration:none; color:inherit; display:flex; flex-direction:column; gap:8px;
+    transition:border-color .15s, box-shadow .15s; }
+  .card:hover{ border-color:var(--cobalt); box-shadow:0 4px 16px -8px rgba(0,35,71,0.18); }
+  .card .tool-eyebrow{ font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--cobalt); margin-bottom:2px; }
+  .card h2{ font-family:'Sora',sans-serif; font-size:17px; font-weight:600; margin:0; color:var(--navy); }
+  .card p{ font-size:13px; color:var(--muted); margin:0; line-height:1.5; }
+  .card .status{ font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--good); margin-top:auto; padding-top:10px; }
+  .authgate{ position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:200; padding:24px; }
+  .authcard{ background:var(--panel); border:1px solid var(--line); border-radius:8px; width:100%; max-width:380px; padding:32px 32px 26px; box-shadow:0 8px 24px -12px rgba(0,35,71,0.2); }
+  .authcard .eyebrow{ margin-bottom:8px; }
+  .authcard h1{ font-size:21px; margin:0 0 4px; }
+  .authcard p.sub{ font-size:12.5px; color:var(--muted); margin:0 0 22px; }
+  .authcard label{ display:block; font-size:12px; font-weight:600; color:var(--text); margin-bottom:5px; margin-top:16px; }
+  .authcard input{ width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:6px; font-size:13.5px; font-family:'IBM Plex Sans',sans-serif; box-sizing:border-box; }
+  .authcard button{ width:100%; margin-top:20px; padding:11px; background:var(--cobalt); border:1px solid var(--cobalt);
+    color:#fff; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; font-family:'IBM Plex Sans',sans-serif; letter-spacing:.02em; }
+  .authcard button:hover{ background:var(--secondary); }
+  .authcard .err{ font-size:12.5px; color:var(--bad); margin-top:10px; display:none; }
+  .authcard .err.show{ display:block; }
+</style>
+</head>
+<body>
+<div class="authgate" id="authGate">
+  <div class="authcard">
+    <div class="eyebrow">Cobalt Commercial Credit</div>
+    <h1>Sign in</h1>
+    <p class="sub">Cobalt Tools — for the team only.</p>
+    <label>Email</label>
+    <input type="email" id="authEmail" autocomplete="username">
+    <label>Password</label>
+    <input type="password" id="authPassword" autocomplete="current-password">
+    <button id="authSubmit">Sign in</button>
+    <div class="err" id="authErr"></div>
+  </div>
+</div>
+<div class="wrap" id="mainApp" style="display:none;">
+  <div class="topline"><button class="signout" id="signOutBtn">Sign out</button></div>
+  <div class="header">
+    <div class="brand"><svg xmlns="http://www.w3.org/2000/svg" viewBox="140 270 400 225"><polygon fill="#1a4b8c" points="242.74669 285.5804 256.15816 374.10946 327.42649 334.47028"/><polygon fill="#4a7fc4" points="329.32111 430.70878 329.32111 335.56417 258.07371 383.13647"/><polygon fill="#002347" points="154.63524 335.56417 154.63524 430.70878 225.88271 383.13647"/><polygon fill="#0047ab" points="227.7982 374.10946 241.20966 285.5804 156.52986 334.47028"/><polygon fill="#0047ab" points="227.7982 392.16349 155.13954 432.57591 241.4713 482.4196"/><polygon fill="#1a4b8c" points="256.15816 392.16349 242.48506 482.4196 328.81682 432.57591"/></svg></div>
+    <div class="brand-heading">
+      <div class="eyebrow">Cobalt Commercial Credit</div>
+      <h1>Cobalt Tools</h1>
+    </div>
+  </div>
+  <div class="grid">
+    <a class="card" href="https://cobaltcommercialcredit.github.io/cobalt-prospect-engine/">
+      <div class="tool-eyebrow">CRE Origination</div>
+      <h2>Cobalt CRE Prospecting</h2>
+      <p>Owner-direct CRE prospecting — scored, filtered, and tracked from first contact.</p>
+      <div class="status">Live</div>
+    </a>
+    <a class="card" href="https://cobaltcommercialcredit.github.io/cobalt-debt-deals/">
+      <div class="tool-eyebrow">Credit Origination</div>
+      <h2>Cobalt Credit Prospecting</h2>
+      <p>Loans, LOC, ABL, factoring, equipment finance — prospecting through funded.</p>
+      <div class="status">Live</div>
+    </a>
+    <a class="card" href="https://cobaltcommercialcredit.github.io/cobalt-slb-calculator/">
+      <div class="tool-eyebrow">Client Calculator</div>
+      <h2>SLB Calculator</h2>
+      <p>Sale-leaseback cost-of-capital calculator for live client calls.</p>
+      <div class="status">Live</div>
+    </a>
+    <a class="card" href="https://cobaltcommercialcredit.github.io/cobalt-debt-capacity-calc/">
+      <div class="tool-eyebrow">Client Calculator</div>
+      <h2>Debt Capacity Calculator</h2>
+      <p>ABL, revolver, factoring, equipment finance, term loan, and CRE loan sizing.</p>
+      <div class="status">Live</div>
+    </a>
+    <a class="card" href="https://cobaltcommercialcredit.github.io/cobalt-treasury-audit/">
+      <div class="tool-eyebrow">Client Deliverable</div>
+      <h2>Treasury Firepower Audit</h2>
+      <p>Full treasury optimization and capital structure review, with client-ready PDF export.</p>
+      <div class="status">Live</div>
+    </a>
+    <a class="card" href="https://cobaltcommercialcredit.github.io/cobalt-referral-partners/">
+      <div class="tool-eyebrow">Channel Management</div>
+      <h2>Referral Partner Tracker</h2>
+      <p>Banks, brokers, and COIs — linked to real prospects and deals, so you can see who's actually producing.</p>
+      <div class="status">Live</div>
+    </a>
+  </div>
+</div>
+<script>
+(function(){
+  var SUPABASE_URL = 'https://pdqywwxyibnapeytoalk.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_gAk4DGF0YlBxFQkcO92reQ_cb9H91lQ';
+  var AUTH = SUPABASE_URL + '/auth/v1';
+  function $(id){ return document.getElementById(id); }
+  async function authSignIn(email, password){
+    var res = await fetch(AUTH+'/token?grant_type=password', {
+      method:'POST', headers:{ 'apikey':SUPABASE_KEY, 'Content-Type':'application/json' },
+      body: JSON.stringify({ email:email, password:password })
+    });
+    var data = await res.json();
+    if(!res.ok) throw new Error(data.error_description || data.msg || 'Incorrect email or password');
+    return data;
+  }
+  async function authRefresh(refreshToken){
+    var res = await fetch(AUTH+'/token?grant_type=refresh_token', {
+      method:'POST', headers:{ 'apikey':SUPABASE_KEY, 'Content-Type':'application/json' },
+      body: JSON.stringify({ refresh_token:refreshToken })
+    });
+    var data = await res.json();
+    if(!res.ok) throw new Error('refresh failed');
+    return data;
+  }
+  function saveSession(data){
+    var session = { access_token:data.access_token, refresh_token:data.refresh_token,
+      expires_at: Date.now() + (data.expires_in||3600)*1000, email: data.user && data.user.email };
+    try{ localStorage.setItem('cobalt_session', JSON.stringify(session)); }catch(e){}
+    return session;
+  }
+  function loadStoredSession(){
+    try{ var raw = localStorage.getItem('cobalt_session'); return raw ? JSON.parse(raw) : null; }catch(e){ return null; }
+  }
+  function clearSession(){ try{ localStorage.removeItem('cobalt_session'); }catch(e){} }
+  async function ensureValidSession(){
+    var session = loadStoredSession();
+    if(!session) return false;
+    if(Date.now() < session.expires_at - 60000) return true;
+    try{ saveSession(await authRefresh(session.refresh_token)); return true; }
+    catch(e){ clearSession(); return false; }
+  }
+  function showAuthErr(msg){ var el=$('authErr'); el.textContent=msg; el.classList.add('show'); }
+  $('authSubmit').addEventListener('click', async function(){
+    var email = $('authEmail').value.trim();
+    var password = $('authPassword').value;
+    if(!email || !password){ showAuthErr('Enter an email and password.'); return; }
+    $('authSubmit').disabled = true;
+    try{
+      var data = await authSignIn(email, password);
+      saveSession(data);
+      enterApp();
+    }catch(e){ showAuthErr(e.message || 'Incorrect email or password'); }
+    $('authSubmit').disabled = false;
+  });
+  $('signOutBtn').addEventListener('click', function(){
+    clearSession();
+    $('mainApp').style.display = 'none';
+    $('authGate').style.display = 'flex';
+    $('authEmail').value=''; $('authPassword').value='';
+  });
+  function enterApp(){
+    $('authGate').style.display = 'none';
+    $('mainApp').style.display = 'block';
+  }
+  (async function init(){
+    var ok = await ensureValidSession();
+    if(ok){ enterApp(); }
+    else { $('authGate').style.display = 'flex'; $('mainApp').style.display = 'none'; }
+  })();
+})();
+</script>
+</body>
+</html>
