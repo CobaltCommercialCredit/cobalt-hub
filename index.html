@@ -39,6 +39,11 @@
   .grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
   .grid-3{ grid-template-columns:1fr 1fr 1fr; }
   .grid-4{ grid-template-columns:1fr 1fr 1fr 1fr; }
+  .card.feature{ grid-column:1/-1; display:flex; justify-content:space-between; align-items:center; gap:20px; }
+  .card.feature .crm-stats{ display:flex; gap:22px; font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--navy); }
+  .card.feature .crm-stats b{ display:block; font-family:'Sora',sans-serif; font-size:20px; letter-spacing:0; text-transform:none; }
+  .card.feature .crm-stats .bad{ color:#b3261e; }
+  @media (max-width:700px){ .card.feature{ flex-direction:column; align-items:flex-start; } }
   @media (max-width:900px){ .grid-4{ grid-template-columns:1fr 1fr; } }
   @media (max-width:800px){ .grid-3{ grid-template-columns:1fr 1fr; } }
   .card{ background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:24px;
@@ -89,6 +94,14 @@
   <div class="group">
     <div class="group-head"><h3>Tracking / Origination</h3><div class="rule"></div></div>
     <div class="grid grid-4">
+      <a class="card feature" href="https://cobaltcommercialcredit.github.io/cobalt-crm/">
+        <div>
+          <h2>CRM</h2>
+          <p>Every company and person, every touch. Today's follow ups, COIs, nurture, and source attribution. Feeds the Pipeline and the Referral Partner Tracker.</p>
+          <div class="status">Live</div>
+        </div>
+        <div class="crm-stats" id="crmStats"></div>
+      </a>
       <a class="card" href="https://cobaltcommercialcredit.github.io/cobalt-prospect-engine/">
         <h2>CRE Cold Outreach</h2>
         <p>Owner-direct CRE Cold Outreach — scored, filtered, and tracked from first contact.</p>
@@ -221,9 +234,25 @@
       var r6 = await fetch(REST+'/slb_deals?select=estimated_amount,stage,actual_commission,funded_date', { headers: sbHeaders() });
       if(r6.ok) out.slbDeals = await r6.json();
     }catch(e){}
+    try{
+      var today = new Date(); var ymd = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+      var rc = await fetch(REST+'/crm_companies?select=status,next_touch_date,do_not_contact', { headers: sbHeaders() });
+      var rt = await fetch(REST+'/crm_activities?select=due_date&completed=eq.false&due_date=lte.'+ymd, { headers: sbHeaders() });
+      if(rc.ok){ var cos = await rc.json(); var tasks = rt.ok ? await rt.json() : [];
+        var live = cos.filter(function(c){ return c.status!=='Dead' && c.status!=='Do Not Contact' && !c.do_not_contact; });
+        out.crm = { active: live.length, overdue: live.filter(function(c){ return c.next_touch_date && c.next_touch_date < ymd; }).length,
+          today: live.filter(function(c){ return c.next_touch_date === ymd; }).length + tasks.length, nurture: live.filter(function(c){ return c.status==='Nurture'; }).length };
+      }
+    }catch(e){}
     return out;
   }
+  function renderCrmStats(c){
+    var el = $('crmStats'); if(!el) return;
+    if(!c){ el.innerHTML=''; return; }
+    el.innerHTML = '<div><b class="'+(c.overdue?'bad':'')+'">'+c.overdue+'</b>Overdue</div><div><b>'+c.today+'</b>Due today</div><div><b>'+c.active+'</b>Active</div><div><b>'+c.nurture+'</b>Nurture</div>';
+  }
   function renderDashboard(data){
+    renderCrmStats(data.crm);
     var deals = data.deals || [];
     var activeDeals = deals.filter(function(d){ return d.stage!=='Funded' && d.stage!=='Dead'; });
     var activeValue = activeDeals.reduce(function(s,d){ return s+(d.estimated_amount||0); }, 0);
