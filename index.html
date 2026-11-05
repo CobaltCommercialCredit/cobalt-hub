@@ -49,7 +49,7 @@
   .card.feature .feature-cta{ display:inline-flex; align-items:center; gap:8px; margin-top:8px; align-self:flex-start; background:var(--cobalt); color:#fff;
     font-family:'IBM Plex Sans',sans-serif; font-size:13.5px; font-weight:600; padding:9px 16px; border-radius:6px; }
   .card.feature:hover .feature-cta{ background:var(--navy); }
-  .crm-stats{ display:grid; grid-template-columns:repeat(4, minmax(110px,1fr)); gap:12px; flex:1; max-width:620px; }
+  .crm-stats{ display:grid; grid-template-columns:repeat(5, minmax(96px,1fr)); gap:12px; flex:1; max-width:660px; }
   .crm-tile{ background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:16px 18px; }
   .crm-tile b{ display:block; font-family:'Sora',sans-serif; font-size:36px; font-weight:600; line-height:1; color:var(--navy); }
   .crm-tile span{ display:block; margin-top:8px; font-family:'IBM Plex Mono',monospace; font-size:11.5px; letter-spacing:.07em; text-transform:uppercase; color:var(--navy); }
@@ -57,6 +57,7 @@
   .crm-tile.warn{ background:#fbf3e2; border-color:#efdcb3; } .crm-tile.warn b{ color:#9a6a12; }
   .crm-tile.ok b{ color:#0f7a4a; }
   @media (max-width:1000px){ .card.feature{ flex-direction:column; align-items:stretch; } .crm-stats{ max-width:none; } }
+  @media (max-width:1180px){ .crm-tile b{ font-size:30px; } }
   @media (max-width:560px){ .crm-stats{ grid-template-columns:1fr 1fr; } .crm-tile b{ font-size:30px; } }
   @media (max-width:900px){ .grid-4{ grid-template-columns:1fr 1fr; } }
   @media (max-width:800px){ .grid-3{ grid-template-columns:1fr 1fr; } }
@@ -107,12 +108,12 @@
   <div class="dash-strip" id="dashboardStrip"></div>
   <div class="group">
     <div class="group-head"><h3>Tracking / Origination</h3><div class="rule"></div></div>
-    <div class="grid grid-4">
+    <div class="grid grid-3">
       <a class="card feature" href="https://cobaltcommercialcredit.github.io/cobalt-crm/">
         <div class="feature-main">
           <div class="tool-eyebrow">Start here every morning</div>
           <h2>CRM</h2>
-          <p>Every company and person, every touch. Today's follow ups, COIs, nurture, and where deals come from. Feeds the Pipeline and the Referral Partner Tracker.</p>
+          <p>Every company and person, every touch. Today's follow ups, your COIs and what they've sent you, nurture, and where deals come from. Feeds the Pipeline.</p>
           <span class="feature-cta">Open CRM →</span>
         </div>
         <div class="crm-stats" id="crmStats"></div>
@@ -125,11 +126,6 @@
       <a class="card" href="https://cobaltcommercialcredit.github.io/cobalt-debt-deals/">
         <h2>Pipeline</h2>
         <p>Loans, LOC, ABL, factoring, equipment finance — prospecting through funded.</p>
-        <div class="status">Live</div>
-      </a>
-      <a class="card" href="https://cobaltcommercialcredit.github.io/cobalt-referral-partners/">
-        <h2>Referral Partner Tracker</h2>
-        <p>Banks, brokers, and COIs — linked to real prospects and deals, so you can see who's actually producing.</p>
         <div class="status">Live</div>
       </a>
       <a class="card" href="https://cobaltcommercialcredit.github.io/cobalt-bank-matrix/">
@@ -253,10 +249,12 @@
       var today = new Date(); var ymd = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
       var rc = await fetch(REST+'/crm_companies?select=status,next_touch_date,do_not_contact', { headers: sbHeaders() });
       var rt = await fetch(REST+'/crm_activities?select=due_date&completed=eq.false&due_date=lte.'+ymd, { headers: sbHeaders() });
+      var rp = await fetch(REST+'/referral_partners?select=status', { headers: sbHeaders() });
       if(rc.ok){ var cos = await rc.json(); var tasks = rt.ok ? await rt.json() : [];
         var live = cos.filter(function(c){ return c.status!=='Dead' && c.status!=='Do Not Contact' && !c.do_not_contact; });
         out.crm = { active: live.length, overdue: live.filter(function(c){ return c.next_touch_date && c.next_touch_date < ymd; }).length,
-          today: live.filter(function(c){ return c.next_touch_date === ymd; }).length + tasks.length, nurture: live.filter(function(c){ return c.status==='Nurture'; }).length };
+          today: live.filter(function(c){ return c.next_touch_date === ymd; }).length + tasks.length, nurture: live.filter(function(c){ return c.status==='Nurture'; }).length,
+          cois: rp.ok ? (await rp.json()).filter(function(x){ return x.status==='Active'; }).length : null };
       }
     }catch(e){}
     return out;
@@ -269,7 +267,7 @@
       [c.today, 'Due today', c.today ? 'warn' : ''],
       [c.active, 'Active', ''],
       [c.nurture, 'Nurture', '']
-    ].map(function(x){ return '<div class="crm-tile '+x[2]+'"><b>'+x[0]+'</b><span>'+x[1]+'</span></div>'; }).join('');
+    ].concat(c.cois==null?[]:[[c.cois, 'Active COIs', '']]).map(function(x){ return '<div class="crm-tile '+x[2]+'"><b>'+x[0]+'</b><span>'+x[1]+'</span></div>'; }).join('');
   }
   function renderDashboard(data){
     renderCrmStats(data.crm);
