@@ -247,13 +247,14 @@
     }catch(e){}
     try{
       var today = new Date(); var ymd = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
-      var rc = await fetch(REST+'/crm_companies?select=status,next_touch_date,do_not_contact', { headers: sbHeaders() });
+      var rc = await fetch(REST+'/crm_companies?select=status,next_touch_date,do_not_contact,kind', { headers: sbHeaders() });
       var rt = await fetch(REST+'/crm_activities?select=due_date&completed=eq.false&due_date=lte.'+ymd, { headers: sbHeaders() });
       var rp = await fetch(REST+'/referral_partners?select=status', { headers: sbHeaders() });
       if(rc.ok){ var cos = await rc.json(); var tasks = rt.ok ? await rt.json() : [];
         var live = cos.filter(function(c){ return c.status!=='Dead' && c.status!=='Do Not Contact' && !c.do_not_contact; });
-        out.crm = { active: live.length, overdue: live.filter(function(c){ return c.next_touch_date && c.next_touch_date < ymd; }).length,
-          today: live.filter(function(c){ return c.next_touch_date === ymd; }).length + tasks.length, nurture: live.filter(function(c){ return c.status==='Nurture'; }).length,
+        var prospects = live.filter(function(c){ return !c.kind || c.kind==='company'; });
+        out.crm = { active: prospects.length, overdue: live.filter(function(c){ return c.next_touch_date && c.next_touch_date < ymd; }).length,
+          today: live.filter(function(c){ return c.next_touch_date === ymd; }).length + tasks.length, nurture: prospects.filter(function(c){ return c.status==='Nurture'; }).length,
           cois: rp.ok ? (await rp.json()).filter(function(x){ return x.status==='Active'; }).length : null };
       }
     }catch(e){}
